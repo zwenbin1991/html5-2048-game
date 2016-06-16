@@ -1,11 +1,50 @@
 @charset "utf-8";
 
 #box2048 {
+    position: relative;
+
     width: 5rem;
-    height: 5rem;
     padding: .2rem;
+
+    margin: 0 auto;
+
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
-    background: #996666;
+}
+
+#box2048 .info {
+    text-align: center;
+
+    margin-bottom: .3rem;
+}
+
+#box2048 h1 {
+    font-size: .36rem;
+    text-align: center;
+}
+
+#box2048 label,
+#box2048 .score {
+    font-size: .3rem;
+}
+
+#box2048 .grid {
+    position: relative;
+
+    width: 100%;
+    height: 5rem;
+
+    background: #cccc99;
+}
+
+#box2048 button {
+    display: block;
+
+    padding: .15rem;
+    line-height: .3rem;
+
+    font-size: .2rem;
+
+    margin: .15rem auto;
 }
