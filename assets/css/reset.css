@@ -1,0 +1,42 @@
+@charset "utf-8";
+
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, textarea, p, blockquote, th, td {
+    margin:0;
+    padding:0
+}
+
+a {
+    color: #fff;
+    text-decoration: none;
+}
+
+ul, ol, li {
+    list-style: none;
+}
+
+img, button {
+    border: 0;
+}
+
+.clearfix {
+    display: block;
+    *zoom: 1;
+    _height: 1%;
+}
+
+.clearfix:after {
+    display: block;
+    content: '\0020';
+    clear: both;
+    font-size: 0;
+    visibility: hidden;
+    height: 0;
+}
+
+.fl {
+    float: left;
+}
+
+.fr {
+    float: right;
+}
