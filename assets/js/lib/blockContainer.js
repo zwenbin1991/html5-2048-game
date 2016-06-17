@@ -6,8 +6,8 @@
 'use strict';
 
 (function (win, factory) {
-    win.BlockContainer = factory();
-})(window, function () {
+    win.BlockContainer = factory([].slice, /(left|top)/i, /(right|bottom)/i);
+})(window, function (nativeSlice, reverseExp, forwardExp) {
     var BlockContainer = function () {
         this.init.apply(this, arguments);
     };
@@ -53,6 +53,7 @@
         e.preventDefault();
 
         var touch = e.touches[0];
+
         this.startLeft = touch.pageX;
         this.startTop = touch.pageY;
     };
@@ -73,8 +74,105 @@
         // 如果滑动距离小于预定值，则试做点击
         if (!swipe.detectSwipe(deltaHorizontal, deltaVertical)) return;
 
+        // 得到滑动方向
         direction = swipe.detectSwipeDirection(deltaHorizontal, deltaVertical);
-        
+
+        this._moveBlocks(this._getUnNullBlocks(), direction);
+    };
+
+    BlockContainer.prototype._detectNullBlockExist = function () {
+        var blocks = this.blocks;
+
+        for (var i = 0, length = blocks.length; i < length; i++) {
+            if (!blocks[i].state) return true;
+        }
+
+        return false;
+    };
+
+    BlockContainer.prototype._detectSingleNullBlockExist = function (block, direction, isForward, isReverse) {
+        //var coordinateIndex = Math.floor(block[sign] / this.blockCellTotal);
+        var coordinate = isForward.test(direction) ?
+            (RegExp.$1 === 'right' ? 'coordinateX' : 'coordinateY') :
+            (RegExp.$1 === 'left' ? 'coordinateX' : 'coordinateY');
+
+        var blocks = this._getBlocksByCoordinate(coordinate, block)
+        //var startPos = rowIndex * this.blockCellTotal;
+        //var endPos = startPos + this.blockCellTotal;
+        //
+        //for (; startPos < endPos; startPos++) {
+        //    if (!blocks[startPos].state) return true;
+        //}
+
+        return false;
+    };
+
+    BlockContainer.prototype._getBlocksByCoordinate = function (coordinate, block) {
+        var blocks = this.blocks;
+        var coordinateX = coordinate === 'coordinateX' ? block[coordinate] : 0;
+        var coordinateY = coordinate === 'coordinateY' ? block[coordinate] : 0;
+
+        return blocks.filter(function (currentBlock) {
+            if (coordinate === 'coordinateX') return currentBlock.coordinateX === coordinateX;
+            else return currentBlock.coordinateY === coordinateY;
+        });
+    };
+
+
+    BlockContainer.prototype._getRecentlyBlocksByDirection = function (canMoveBlocks, isForward, isReverse) {
+        var blocks = this.blocks;
+        var startPos, endPos, blockIndex, rowIndex;
+
+        return canMoveBlocks.map(function (canMoveBlock) {
+            blockIndex = blocks.indexOf(canMoveBlock);
+            rowIndex = Math.floor(blockIndex / this.blockCellTotal);
+            startPos = isForward ? rowIndex * this.blockCellTotal :
+
+        });
+    };
+
+    BlockContainer.prototype._getUnNullBlocks = function () {
+        return this.blocks.filter(function (block) {
+            return block.state;
+        });
+    };
+
+    BlockContainer.prototype._iterateBlocks = function (callback) {
+        return function () {
+            var blocks = this.blocks;
+            var self = this;
+            var args = nativeSlice.call(arguments);
+
+            blocks.forEach(function (block) {
+                callback.apply(self, [block].concat(args))
+            });
+        }
+    };
+
+    BlockContainer.prototype._moveBlocks = function (unNullBlocks, direction) {
+        // 如果容器里没有空的方块
+        if (!this._detectNullBlockExist()) {
+            alert('全满了');
+            return;
+        }
+
+        // 是否是正方向
+        var isForward = forwardExp.test(direction);
+        // 是否是反方向
+        var isReverse = reverseExp.test(direction);
+
+        // 得到符合条件的可移动的方块
+        var canMoveBlocks = unNullBlocks.filter((function (unNullBlock) {
+            return this._detectSingleNullBlockExist(unNullBlock, direction, isForward, isReverse);
+        }).bind(this));
+
+        if (canMoveBlocks.length) {
+            var recentlyBlocks = this._getRecentlyBlocksByDirection(canMoveBlocks, isForward, isReverse).map(function (pos) {
+
+            });
+        }
+
+        //this._iterateBlocks(function (unNullblock) {}, unNullBlocks)();
     };
 
     BlockContainer.prototype._generateBlockRandomCoordinate = function () {
@@ -107,17 +205,15 @@
         };
     };
 
-    BlockContainer.prototype.renderGrid = function () {
-        this.blocks.forEach(function (block) {
-            block.render();
-        });
-    };
+    BlockContainer.prototype.renderGrid = BlockContainer.prototype._iterateBlocks(function (block) {
+        block.render();
+    });
 
     BlockContainer.prototype.renderBlocks = function () {
         var randomCoordinates = [this._generateBlockRandomCoordinate(), this._generateBlockRandomCoordinate()], offsetPosition, isTextExist;
 
-        for (var coordinateX = 0; coordinateX < this.blockRowTotal; coordinateX++) {
-            for (var coordinateY = 0; coordinateY < this.blockCellTotal; coordinateY++) {
+        for (var coordinateY = 0; coordinateY < this.blockCellTotal; coordinateY++) {
+            for (var coordinateX = 0; coordinateX < this.blockRowTotal; coordinateX++) {
                 offsetPosition = this._generateOffsetPosition(coordinateX, coordinateY);
                 isTextExist = this._matchCoordinate(randomCoordinates, coordinateX, coordinateY);
 

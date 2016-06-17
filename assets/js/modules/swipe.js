@@ -24,9 +24,13 @@
             return Math.abs(deltaHorizontal) >= __PRESET_DELTA_HORIZONTAL__ || Math.abs(deltaVertical) >= __PRESET_DELTA_VERTICAL__;
         },
 
-        /*
-        * 检测滑动方向
-        * */
+        /**
+         * 检测滑动方向
+         *
+         * @param {Number} deltaHorizontal 水平滑动距离
+         * @param {Number} deltaVertical 垂直滑动距离
+         * @return {String}
+         */
         detectSwipeDirection: function (deltaHorizontal, deltaVertical) {
             if (Math.abs(deltaHorizontal) >= Math.abs(deltaVertical)) {
                 // horizontal
