@@ -12,7 +12,7 @@
         this.init.apply(this, arguments);
     };
 
-    Block.prototype.init = function (width, height, coordinateX, coordinateY, left, top, blockContainer) {
+    Block.prototype.init = function (width, height, coordinateX, coordinateY, left, top, text, blockContainer, selector) {
         this.coordinateX = coordinateX;
         this.coordinateY = coordinateY;
         this.width = width;
@@ -20,17 +20,23 @@
         this.left = left;
         this.top = top;
         this.blockContainer = blockContainer;
+        this.selector = selector || 'cell';
         this.unit = 'rem';
-        this.state = 0;
+        this.stateClassPrefix = 'state-';
+
+        this.setText(text);
+        this.setState(text ? 1 : 0);
     };
 
-    Block.prototype._getDOMNode = function (text) {
+    Block.prototype._getDOMNode = function () {
         var node = document.createElement('div');
-        var className = !this.state && !text ? 'two' : text;
+        var className = [this.selector].concat(!this.state ? void 0 : this.stateClassPrefix + this.text).join(' ');
         var cssText = this._getCSSText();
 
         node.setAttribute('class', className);
         node.style.cssText = cssText;
+
+        if (this.text) node.innerHTML = this.text;
 
         return node;
     };
@@ -40,33 +46,28 @@
             'left:' + this.left + this.unit,
             'top:' + this.top + this.unit,
             'width:' + this.width + this.unit,
-            'height:' + this.height + this.unit
+            'height:' + this.height + this.unit,
+            'line-height:'+ this.height + this.unit
         ];
 
         return cssTexts.join(';');
-    };
-
-    Block.prototype.getCoordinate = function (name) {
-        return this[name];
-    };
-
-    Block.prototype.setCoordinate = function (name, value) {
-        this[name] = value;
     };
 
     Block.prototype.setState = function (state) {
         this.state = state;
     };
 
-    Block.prototype._move = function (xPixel, yPi) {
+    Block.prototype.setText = function (text) {
+        this.text = text || '';
+    };
+
+    Block.prototype.move = function (xPixel, yPi) {
 
     };
 
-    Block.prototype._render = function () {
-        this.blockContainer.append(this._getDOMNode());
+    Block.prototype.render = function () {
+        this.blockContainer.el.appendChild(this._getDOMNode());
     };
 
-    Block.prototype.renderOrMove = function () {
-        !this.state ? this._render() : this._move();
-    };
+    return Block;
 });

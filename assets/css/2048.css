@@ -4,7 +4,6 @@
     position: relative;
 
     width: 5rem;
-    padding: .2rem;
 
     margin: 0 auto;
 
@@ -20,6 +19,8 @@
 }
 
 #box2048 h1 {
+    margin-top: .5rem;
+
     font-size: .36rem;
     text-align: center;
 }
@@ -29,6 +30,10 @@
     font-size: .3rem;
 }
 
+#box2048 .score {
+    font-weight: 700;
+}
+
 #box2048 .grid {
     position: relative;
 
@@ -36,6 +41,8 @@
     height: 5rem;
 
     background: #bbada0;
+
+    border-radius: .1rem;
 }
 
 #box2048 button {
@@ -50,15 +57,21 @@
 }
 
 #box2048 .cell {
-    width: 1rem;
-    height: 1rem;
+    position: absolute;
 
     font-size: .3rem;
 
     text-align: center;
+    border-radius: .08rem;
+    color: rgb(119, 110, 101);
+    background: #ccc0b3;
 }
 
-#box2048 .two {
+#box2048 .state {
     background: rgb(238, 228, 218);
     color: rgb(119, 110, 101);
+}
+
+#box2048 .state-2 {
+    background: rgb(237, 224, 200);
 }

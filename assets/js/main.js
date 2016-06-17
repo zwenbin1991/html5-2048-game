@@ -5,11 +5,10 @@
 
 'use strict';
 
-// 方块
-var blocks = [];
+// 方块容器实例
+var blockContainer = null;
 
-// 分数
-var score = 0;
+var scoreElement = document.querySelector('.score');
 
 function main () {
     // 跨终端适配
@@ -20,7 +19,8 @@ function main () {
 }
 
 function initGame () {
-    game.init();
+    blockContainer = new BlockContainer('#box2048 .grid');
+    scoreElement.innerHTML = blockContainer.score;
 }
 
 document.addEventListener('DOMContentLoaded', function () {

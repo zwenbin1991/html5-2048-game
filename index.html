@@ -8,18 +8,32 @@
         <link href="assets/css/2048.css" rel="stylesheet" />
     </head>
     <body>
+        <!-- 视图结构 start -->
         <div id="box2048">
             <h1>2048游戏</h1>
             <div class="info">
                 <label>score:</label>
-                <span class="score">0</span>
+                <span class="score"></span>
             </div>
             <div class="grid"></div>
             <button class="new-game">新游戏</button>
         </div>
+        <!-- 视图结构 end -->
 
+        <!-- 模块 start -->
         <script src="assets/js/modules/viewport.js"></script>
-        <script src="assets/js/modules/game.js"></script>
+        <script src="assets/js/modules/event.js"></script>
+        <script src="assets/js/modules/swipe.js"></script>
+        <script src="assets/js/modules/animate.js"></script>
+        <!-- 模块 end -->
+
+        <!-- 类 start -->
+        <script src="assets/js/lib/block.js"></script>
+        <script src="assets/js/lib/blockContainer.js"></script>
+        <!-- 类 end -->
+
+        <!-- 模块 start -->
         <script src="assets/js/main.js"></script>
+        <!-- 模块 end -->
     </body>
 </html>
