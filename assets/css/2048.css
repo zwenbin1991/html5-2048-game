@@ -56,22 +56,21 @@
     margin: .15rem auto;
 }
 
-#box2048 .cell {
+#box2048 .layout-square {
     position: absolute;
 
     font-size: .3rem;
 
     text-align: center;
     border-radius: .08rem;
-    color: rgb(119, 110, 101);
     background: #ccc0b3;
 }
 
-#box2048 .state {
-    background: rgb(238, 228, 218);
-    color: rgb(119, 110, 101);
-}
+/*#box2048 .state {*/
+    /*background: rgb(238, 228, 218);*/
+    /*color: rgb(119, 110, 101);*/
+/*}*/
 
-#box2048 .state-2 {
-    background: rgb(237, 224, 200);
-}
+/*#box2048 .state-2 {*/
+    /*background: rgb(237, 224, 200);*/
+/*}*/

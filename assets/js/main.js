@@ -5,10 +5,8 @@
 
 'use strict';
 
-// 方块容器实例
-var blockContainer = null;
-
-var scoreElement = document.querySelector('.score');
+// 画布
+var canvas = null;
 
 function main () {
     // 跨终端适配
@@ -19,8 +17,11 @@ function main () {
 }
 
 function initGame () {
-    blockContainer = new BlockContainer('#box2048 .grid');
-    scoreElement.innerHTML = blockContainer.score;
+    canvas = new Canvas('#box2048 .grid');
+
+    // 渲染普通方块
+    canvas.renderLayoutSquare();
+    //scoreElement.innerHTML = blockContainer.score;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
