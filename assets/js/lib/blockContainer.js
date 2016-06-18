@@ -84,51 +84,129 @@
         var blocks = this.blocks;
 
         for (var i = 0, length = blocks.length; i < length; i++) {
-            if (!blocks[i].state) return true;
+            if (!blocks[i].state)
+                return true;
         }
 
         return false;
     };
 
-    BlockContainer.prototype._detectSingleNullBlockExist = function (block, direction, isForward, isReverse) {
-        //var coordinateIndex = Math.floor(block[sign] / this.blockCellTotal);
-        var coordinate = isForward.test(direction) ?
-            (RegExp.$1 === 'right' ? 'coordinateX' : 'coordinateY') :
-            (RegExp.$1 === 'left' ? 'coordinateX' : 'coordinateY');
+    /**
+     * 检测当前方块在方向上是否有空方块
+     *
+     * @param {Object} block 当前方块
+     * @param {String} direction 手指滑动方向
+     * @return {Boolean}
+     */
+    BlockContainer.prototype._detectSingleNullBlockExist = function (block, direction) {
+        var blocks = this._getBlocksByDirection(block, direction);
 
-        var blocks = this._getBlocksByCoordinate(coordinate, block)
-        //var startPos = rowIndex * this.blockCellTotal;
-        //var endPos = startPos + this.blockCellTotal;
-        //
-        //for (; startPos < endPos; startPos++) {
-        //    if (!blocks[startPos].state) return true;
-        //}
+        if (!blocks)
+            return false;
+
+        for (var i = 0, length = blocks.length; i < length; i++) {
+            if (!blocks[i].state)
+                return true;
+        }
 
         return false;
     };
 
-    BlockContainer.prototype._getBlocksByCoordinate = function (coordinate, block) {
-        var blocks = this.blocks;
-        var coordinateX = coordinate === 'coordinateX' ? block[coordinate] : 0;
-        var coordinateY = coordinate === 'coordinateY' ? block[coordinate] : 0;
+    /**
+     * 检测当前方块的相邻方块是否空方块
+     *
+     * @param {Object} block 当前方块
+     * @param {String} direction 手指滑动方向
+     * @return {Boolean}
+     */
+    BlockContainer.prototype._detectNearNullBlockExist = function (block, direction) {
+        var coordinateX, coordinateY;
 
-        return blocks.filter(function (currentBlock) {
-            if (coordinate === 'coordinateX') return currentBlock.coordinateX === coordinateX;
-            else return currentBlock.coordinateY === coordinateY;
+        switch (direction) {
+            case 'left':
+                coordinateX = block.coordinateX - 1;
+                coordinateY = block.coordinateY;
+                break;
+
+            case 'right':
+                coordinateX = block.coordinateX + 1;
+                coordinateY = block.coordinateY;
+                break;
+
+            case 'top':
+                coordinateX = block.coordinateX;
+                coordinateY = block.coordinateY - 1;
+                break;
+
+            case 'bottom':
+                coordinateX = block.coordinateX;
+                coordinateY = block.coordinateY + 1;
+                break;
+        }
+
+        return !this._getBlockByCoordinate(coordinateX, coordinateY).state;
+    };
+
+    /**
+     * 检测当前方块是否当前方向最外层方块
+     *
+     * @param {Object} block 当前方块
+     * @return {Boolean}
+     */
+    BlockContainer.prototype._detectOutsideExist = function (block, direction) {
+        return ((direction === 'left' && block.coordinateX === 0)
+            || (direction === 'right' && block.coordinateX === this.blockRowTotal - 1)
+            || (direction === 'top' && block.coordinateY === 0)
+            || (direction === 'bottom' && block.coordinateY=== this.blockCellTotal - 1));
+    };
+
+    /**
+     * 根据当前方向获取所有方块
+     *
+     * @param {Number} coordinateX 横坐标
+     * @param {Number} coordinateY 纵坐标
+     * @return {Object}
+     */
+    BlockContainer.prototype._getBlocksByDirection = function (block, direction) {
+        return this.blocks.filter(function (currentBlock) {
+            if (direction === 'left'
+                && currentBlock.coordinateY === block.coordinateY
+                && currentBlock.coordinateX < block.coordinateX)
+                    return true;
+
+            else if (direction === 'right'
+                && currentBlock.coordinateY === block.coordinateY
+                && currentBlock.coordinateX > block.coordinateX)
+                    return true;
+
+            else if (direction === 'top'
+                && currentBlock.coordinateX === block.coordinateX
+                && currentBlock.coordinateY < block.coordinateY)
+                    return true;
+
+            else if (direction === 'bottom'
+                && currentBlock.coordinateX === block.coordinateX
+                && currentBlock.coordinateY > block.coordinateY)
+                    return true;
+
+            else    return false;
         });
     };
 
-
-    BlockContainer.prototype._getRecentlyBlocksByDirection = function (canMoveBlocks, isForward, isReverse) {
+    /**
+     * 根据横纵坐标值获取方块
+     *
+     * @param {Number} coordinateX 横坐标
+     * @param {Number} coordinateY 纵坐标
+     * @return {Object}
+     */
+    BlockContainer.prototype._getBlockByCoordinate = function (coordinateX, coordinateY) {
         var blocks = this.blocks;
-        var startPos, endPos, blockIndex, rowIndex;
 
-        return canMoveBlocks.map(function (canMoveBlock) {
-            blockIndex = blocks.indexOf(canMoveBlock);
-            rowIndex = Math.floor(blockIndex / this.blockCellTotal);
-            startPos = isForward ? rowIndex * this.blockCellTotal :
-
-        });
+        for (var i = 0, block, length = blocks.length; (block = blocks[i]) && i < length; i++) {
+            if (block.coordinateX === coordinateX && block.coordinateY === coordinateY)
+                return block;
+        }
     };
 
     BlockContainer.prototype._getUnNullBlocks = function () {
@@ -163,7 +241,7 @@
 
         // 得到符合条件的可移动的方块
         var canMoveBlocks = unNullBlocks.filter((function (unNullBlock) {
-            return this._detectSingleNullBlockExist(unNullBlock, direction, isForward, isReverse);
+            return this._detectSingleNullBlockExist(unNullBlock, direction);
         }).bind(this));
 
         if (canMoveBlocks.length) {
