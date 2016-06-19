@@ -19,9 +19,16 @@ function main () {
 function initGame () {
     canvas = new Canvas('#box2048 .grid');
 
-    // 渲染普通方块
-    canvas.renderLayoutSquare();
-    //scoreElement.innerHTML = blockContainer.score;
+    // 渲染布局方块
+    canvas.renderLayoutSquareDOM();
+
+    // 渲染数字方块
+    canvas.renderNumberSquareDOM();
+
+    // 生成随机数字方块
+    canvas.generateRandomNumberSquare();
+    canvas.generateRandomNumberSquare();
+
 }
 
 document.addEventListener('DOMContentLoaded', function () {

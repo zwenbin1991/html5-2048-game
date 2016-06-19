@@ -9,8 +9,14 @@
     win.LayoutSquare = factory();
 })(window, function () {
     function LayoutSquare () {
-        this.init.apply(this, arguments);
+        Square.apply(this, arguments);
     }
+
+    // 继承
+    Square.inherit(LayoutSquare);
+
+    // 静态
+    LayoutSquare.unit = 'rem';
 
     /**
      * @param {Number} x 横坐标
@@ -28,12 +34,12 @@
         this.height = height;
         this.className = className;
         this.container = container;
-        this.unit = 'rem';
     };
 
     /**
      * 创建DOM节点
      *
+     * @param {Object}
      * @return {HTMLElement}
      */
     LayoutSquare.prototype._generateDOMNode = function () {
@@ -42,31 +48,13 @@
         node.setAttribute('class', this.className);
 
         this._setCSSStyle({
-            left: this.x + this.unit,
-            top: this.y + this.unit,
-            width: this.width + this.unit,
-            height: this.height + this.unit
+            left: this.x + this.constructor.unit,
+            top: this.y + this.constructor.unit,
+            width: this.width + this.constructor.unit,
+            height: this.height + this.constructor.unit
         });
 
         return node;
-    };
-
-    /**
-     * 设置css样式
-     *
-     * @param {Object} styles 样式对象
-     */
-    LayoutSquare.prototype._setCSSStyle = function (styles) {
-        Object.keys(styles).forEach((function (style) {
-            this.node.style[style] = styles[style];
-        }).bind(this));
-    };
-
-    /**
-     * 渲染
-     */
-    LayoutSquare.prototype.render = function () {
-        this.container.appendChild(this._generateDOMNode());
     };
 
     return LayoutSquare;

@@ -59,11 +59,21 @@
 #box2048 .layout-square {
     position: absolute;
 
-    font-size: .3rem;
-
-    text-align: center;
     border-radius: .08rem;
     background: #ccc0b3;
+}
+
+#box2048 .number-square {
+    position: absolute;
+
+    line-height: 1rem;
+    font-size: .3rem;
+    color: #fff;
+    border-radius: .08rem;
+    text-align: center;
+
+    -webkit-transition: left .15s,top .15s,width .15s,height .15s;
+    transition: left .15s,top .15s,width .15s,height .15s;
 }
 
 /*#box2048 .state {*/

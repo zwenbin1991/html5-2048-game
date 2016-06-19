@@ -19,7 +19,7 @@
         var listener = null;
 
         (Array.isArray(eventNames) ? eventNames : eventNames.split(',')).forEach(function (eventName) {
-            (listener = listeners[eventName]).el.addEventListener(eventName, listener.listen, false);
+            (listener = listeners[eventName]).element.addEventListener(eventName, listener.listen, false);
         });
     };
 });
