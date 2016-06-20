@@ -17,10 +17,16 @@ function main () {
 }
 
 function initGame () {
-    canvas = new Canvas('#box2048 .grid');
+    canvas = new Canvas('#box2048 .grid', '.score');
+
+    // 清空布局方块
+    canvas.clearAllSquareDOM(canvas.layoutSquareClassName);
 
     // 渲染布局方块
     canvas.renderLayoutSquareDOM();
+
+    // 清空数字方块
+    canvas.clearAllSquareDOM(canvas.numberSquareClassName);
 
     // 生成数字方块
     canvas.generateNumberSquare();

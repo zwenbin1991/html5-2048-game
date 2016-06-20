@@ -69,11 +69,12 @@
      * 显示带有数字方块
      *
      * @param {String} backgroundColor 背景色
+     * @param {String} fontColor 字体颜色
      * @param {Boolean} isAnimation 显示过程是否带动画效果 [可选] default：false
      */
-    NumberSquare.prototype.showWithText = function (backgroundColor, isAnimation) {
+    NumberSquare.prototype.showWithText = function (backgroundColor, fontColor, isAnimation) {
         isAnimation || (isAnimation = false);
-        this._setCSSStyle({ 'background-color': backgroundColor });
+        this._setCSSStyle({ 'background-color': backgroundColor, 'color': fontColor });
         this.node.innerHTML = this.text;
         isAnimation && $(this.node).animate(this.hasNumberCSSStyle, 100);
     };
@@ -120,15 +121,17 @@
     /**
      * 移动动画过程
      *
+     * @param {Object} axis 坐标
      */
-    NumberSquare.prototype.moveWithAnimation = function (left, top) {
-        $(this.node).animate({
-            left: left + this.constructor.unit,
-            top: top + this.constructor.unit },
+    NumberSquare.prototype.moveWithAnimation = function (axis) {
+        $(this.node).animate(
+            {
+                left: axis.left + this.constructor.unit,
+                top: axis.top + this.constructor.unit
+            },
             this.constructor.speed
         );
     };
 
     return NumberSquare;
 });
-

@@ -7,8 +7,7 @@
 
 (function (win, factory) {
     var backgroundColorMap = {
-        0: '#ccc0b3',
-        2: '#f2b179',
+        2: '#ede0c8',
         4: '#f59563',
         8: '#f67c5f',
         16: '#f65e3b',
@@ -27,11 +26,14 @@
     }
 
     /**
-     * @param {String} selector 选择器
+     * @param {String} selector 画布选择器
+     * @param {String} scoreSelector 分数选择器
      * @constructor
      */
-    Canvas.prototype.init = function (selector) {
+    Canvas.prototype.init = function (selector, scoreSelector) {
         this.element = doc.querySelector(selector);
+        this.scoreElement = doc.querySelector(scoreSelector);
+        this.score = 0;
         this.numberSquares = [];
         this.rowMaximum = 4;
         this.columnMaximum = 4;
@@ -52,6 +54,9 @@
                 listen: this._touchendListener.bind(this)
             }
         });
+
+        // 初始化分数
+        this._updateScore(0);
     };
 
     /**
@@ -125,7 +130,7 @@
 
         currentSquare.setState(1);
         currentSquare.setText('2');
-        currentSquare.showWithText(backgroundColorMap[currentSquare.getText()], true);
+        currentSquare.showWithText(backgroundColorMap[currentSquare.getText()], this._getNumberSquareFontColor(2), true);
     };
 
     /**
@@ -149,7 +154,7 @@
      */
     Canvas.prototype._update = function () {
         // 清空所有数字方块DOM
-        this.clearAllNumberSquareDOM();
+        this.clearAllSquareDOM(this.numberSquareClassName);
 
         // 画布重新渲染数字方块
         this.renderNumberSquareDOM();
@@ -162,117 +167,189 @@
     };
 
     /**
-     * 是否有数字方块可以向左移动
+     * 数字方块更新
+     *
+     * @param {Number} i 坐标索引
      */
-    Canvas.prototype._canMoveLeft = function () {
-        for (var i = 0; i < this.rowMaximum; i++) {
-            for (var j = 1; j < this.columnMaximum; j++) {
-                if (this.numberSquares[i][j].state) {
-                    if (!this.numberSquares[i][j - 1].state)
-                        return true;
-                }
-            }
+    Canvas.prototype._updateNumberSquare = function (numberSquare, state, text) {
+        numberSquare.setState(state);
+        numberSquare.setText(text);
+    };
+
+    /**
+     * 更新分数
+     *
+     * @param {Number} score 分数
+     */
+    Canvas.prototype._updateScore = function (score) {
+        this.score += score;
+        this.scoreElement.innerHTML = '' + this.score;
+    };
+
+    /**
+     * 数字方块坐标迭代
+     *
+     * @param {Function} dispose 处理函数
+     * @return {Function}
+     */
+    Canvas.prototype._iterateeAxis = function (dispose) {
+        return function () {
+            for (var i = 0; i < this.rowMaximum; i++)
+                dispose.call(this, i);
+
+            // 更新画布
+            setTimeout((function () {
+                this._update();
+            }).bind(this), 200);
+        };
+    };
+
+    /**
+     * 检测left和top方向当前方块和目标方块是否存在空的方块
+     */
+    Canvas.prototype._detectLeftOrTopSequareBetween = function (row, firstColumn, secondColumn) {
+        for (var amount = secondColumn + 1; amount < firstColumn; amount++) {
+            if (this.numberSquares[row][amount].state)
+                return false;
         }
 
-        return false;
+        return true;
+    };
+
+    /**
+     * 检测right和bottom方向当前方块和目标方块是否存在空的方块
+     */
+    Canvas.prototype._detectRightOrBottomSequareBetween = function (row, firstColumn, secondColumn) {
+        for (var amount = secondColumn - 1; amount > firstColumn; amount--) {
+            if (this.numberSquares[row][amount].state)
+                return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * 数字方块一系列操作
+     *
+     * @param {Number} i 横坐标迭代量
+     * @param {Number} j 纵坐标迭代量
+     * @param {Number} k 当前坐标当前元素的下一个元素的迭代量
+     * @param {Object} currentSquare 当前存在数字的方块
+     * @param {Object} staySquare 目标方块
+     * @param {Function} detectDisponse 检测方法
+     * @param {Number} sign 方向标识 [可选] default: 0-水平 1-垂直
+     */
+    Canvas.prototype._numberSquareSeriesOption = function (i, j, k, currentSquare, staySquare, detectDispose, sign) {
+        var number = 0;
+        var axis = {};
+        sign || (sign = 0);
+
+        if (!staySquare.state && detectDispose.call(this, i, j, k)) { // 如果找到第一个为空的数字方块，则判断为最近的落脚点
+            number = currentSquare.text;
+
+            // 当前数字方块状态更新为0
+            this._updateNumberSquare(currentSquare);
+
+            // 目标数字方块状态更新为1，并设置数字为2
+            this._updateNumberSquare(staySquare, 1, number);
+
+            // 移动当前数字方块
+            if (!sign) {
+                axis.left = this._getPosition(k);
+                axis.top = this._getPosition(i);
+            } else {
+                axis.left = this._getPosition(j);
+                axis.top = this._getPosition(k);
+            }
+
+            currentSquare.moveWithAnimation(axis);
+
+            return true;
+        } else if (staySquare.text === currentSquare.text && detectDispose.call(this, i, j, k)) { // 如果找到第一个数字相同的数字方块，则判断为最近的落脚点
+            // 求和
+            number = parseInt(currentSquare.text) + parseInt(staySquare.text);
+
+            // 当前数字方块状态更新为0
+            this._updateNumberSquare(currentSquare);
+
+            // 目标数字方块状态更新为1，并设置数字为两者总和
+            this._updateNumberSquare(staySquare, 1, number);
+
+            // 更新分数
+            this._updateScore(number);
+
+            // 移动当前数字方块
+            if (!sign) {
+                axis.left = this._getPosition(k);
+                axis.top = this._getPosition(i);
+            } else {
+                axis.left = this._getPosition(j);
+                axis.top = this._getPosition(k);
+            }
+
+            currentSquare.moveWithAnimation(axis);
+
+            return true;
+        }
     };
 
     /**
      * 数字方块向左移动
      */
-    Canvas.prototype._moveLeft = function () {
-        var currentSquare = null;
-        var staySquare = null, sum;
-
-        for (var i = 0; i < this.rowMaximum; i++) {
-            for (var j = 1; j < this.columnMaximum; j++) {
-                if ((currentSquare = this.numberSquares[i][j]).state) {
-                    for (var k = 0; k < j; k++) {
-                        if (!(staySquare = this.numberSquares[i][k]).state && currentSquare.state) { // 如果找到第一个为空的数字方块，则判断为最近的落脚点
-                            // 当前数字方块状态更新为0
-                            this._updateNumberSquare(currentSquare);
-
-                            // 目标数字方块状态更新为1，并设置数字为2
-                            this._updateNumberSquare(staySquare, 1, '2');
-
-                            // 移动当前数字方块
-                            currentSquare.moveWithAnimation(this._getPosition(k), this._getPosition(i));
-
-                            continue;
-                        } else if ((staySquare = this.numberSquares[i][k]).text === currentSquare.text && currentSquare.state) { // 如果找到第一个数字相同的数字方块，则判断为最近的落脚点
-                            // 求和
-                            sum = parseInt(currentSquare.text) + parseInt(staySquare.text);
-
-                            // 当前数字方块状态更新为0
-                            this._updateNumberSquare(currentSquare);
-
-                            // 目标数字方块状态更新为1，并设置数字为两者总和
-                            this._updateNumberSquare(staySquare, 1, sum);
-
-                            // 移动当前数字方块
-                            currentSquare.moveWithAnimation(this._getPosition(k), this._getPosition(i));
-
-                            continue;
-                        }
-                    }
-
+    Canvas.prototype._moveLeft = Canvas.prototype._iterateeAxis(function (i) {
+        for (var j = 1; j < this.columnMaximum; j++) {
+            if (this.numberSquares[i][j].state) {
+                for (var k = 0; k < j; k++) {
+                    if (this._numberSquareSeriesOption(i, j, k, this.numberSquares[i][j], this.numberSquares[i][k], this._detectLeftOrTopSequareBetween, 0))
+                        break;
                 }
             }
         }
-
-        // 更新画布
-        setTimeout((function () {
-            this._update();
-        }).bind(this), 200);
-    };
+    });
 
     /**
-     * 是否有数字方块可以向右移动
+     * 数字方块向右移动
      */
-    Canvas.prototype._canMoveRight = function () {
-        for (var i = 0; i < this.rowMaximum; i++) {
-            for (var j = this.columnMaximum - 2; j >= 0; j--) {
-                if (this.numberSquares[i][j].state) {
-                    if (!this.numberSquares[i][j + 1].state)
-                        return true;
+    Canvas.prototype._moveRight = Canvas.prototype._iterateeAxis(function (i) {
+        for (var j = this.columnMaximum - 2; j >= 0; j--) {
+            if (this.numberSquares[i][j].state) {
+                for (var k = this.columnMaximum - 1; k > j; k--) {
+                    if (this._numberSquareSeriesOption(i, j, k, this.numberSquares[i][j], this.numberSquares[i][k], this._detectRightOrBottomSequareBetween, 0))
+                        break;
                 }
             }
         }
-
-        return false;
-    };
+    });
 
     /**
-     * 是否有数字方块可以向上移动
+     * 数字方块向上移动
      */
-    Canvas.prototype._canMoveTop = function () {
-        for (var i = 1; i < this.rowMaximum; i++) {
-            for (var j = 0; j < this.columnMaximum; j++) {
-                if (this.numberSquares[i][j].state) {
-                    if (!this.numberSquares[i - 1][j].state)
-                        return true;
+    Canvas.prototype._moveTop = Canvas.prototype._iterateeAxis(function (i) {
+        for (var j = 1; j < this.columnMaximum; j++) {
+            console.log(j, i);
+            if (this.numberSquares[j][i].state) {
+                for (var k = 0; k < j; k++) {
+                    if (this._numberSquareSeriesOption(j, i, k, this.numberSquares[j][i], this.numberSquares[k][i], this._detectLeftOrTopSequareBetween, 1))
+                        break;
                 }
             }
         }
-
-        return false;
-    };
+    });
 
     /**
-     * 是否有数字方块可以向下移动
+     * 数字方块向下移动
      */
-    Canvas.prototype._canMoveBottom = function () {
-        for (var i = this.rowMaximum - 2; i >= 0; i--) {
-            for (var j = 0; j < this.columnMaximum; j++) {
-                if (this.numberSquares[i][j].state) {
-                    if (!this.numberSquares[i + 1][j].state)
-                        return true;
+    Canvas.prototype._moveBottom = Canvas.prototype._iterateeAxis(function (i) {
+        for (var j = this.columnMaximum - 2; j >= 0; j--) {
+            if (this.numberSquares[j][i].state) {
+                for (var k = this.columnMaximum - 1; k > j; k--) {
+                    if (this._numberSquareSeriesOption(j, i, k, this.numberSquares[j][i], this.numberSquares[k][i], this._detectRightOrBottomSequareBetween, 1))
+                        break;
                 }
             }
         }
+    });
 
-        return false;
-    };
 
     /**
      * 计算位置
@@ -282,17 +359,6 @@
      */
     Canvas.prototype._getPosition = function (i) {
         return this.squareGap + i * (this.squareHeight + this.squareGap);
-    };
-
-    /**
-     * 数字方块更新
-     *
-     * @param {Number} i 坐标索引
-     * @return {Number}
-     */
-    Canvas.prototype._updateNumberSquare = function (numberSquare, state, text) {
-        numberSquare.setState(state);
-        numberSquare.setText(text);
     };
 
     /**
@@ -321,13 +387,17 @@
     });
 
     /**
-     * 显示所有数字方块
+     * 显示数字方块
      */
     Canvas.prototype._showNumberSquare = Canvas.prototype._iteratee(function (i, j) {
         var currentNumberSquare = this.numberSquares[i][j];
 
-        if (currentNumberSquare.getState())
-            currentNumberSquare.showWithText(backgroundColorMap[currentNumberSquare.getText()]);
+        if (currentNumberSquare.getState()) {
+            currentNumberSquare.showWithText(
+                backgroundColorMap[currentNumberSquare.getText()],
+                this._getNumberSquareFontColor(currentNumberSquare.getText())
+            );
+        }
     });
 
     /**
@@ -361,10 +431,17 @@
     });
 
     /**
-     * 清空所有数字方块DOM
+     * 获取数字方块字体颜色
      */
-    Canvas.prototype.clearAllNumberSquareDOM = function () {
-        $('.' + this.numberSquareClassName).remove();
+    Canvas.prototype._getNumberSquareFontColor = function (number) {
+        return number < 4 ? '#776e65' : '#fff';
+    };
+
+    /**
+     * 清空所有DOM
+     */
+    Canvas.prototype.clearAllSquareDOM = function (squareClassName) {
+        $('.' + squareClassName).remove();
     };
 
     return Canvas;
