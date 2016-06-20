@@ -39,8 +39,8 @@
     /**
      * 渲染
      */
-    Square.prototype.render = function (extendCSSStyle) {
-        this.container.appendChild(this._generateDOMNode(extendCSSStyle));
+    Square.prototype.render = function () {
+        this.container.appendChild(this._generateDOMNode());
     };
 
     return Square;

@@ -25,6 +25,30 @@
         this.init.apply(this, arguments);
     }
 
+    /*
+    * 初始化新游戏
+    * */
+    Canvas.prototype.initNewGame = function () {
+        // 清空布局方块
+        canvas.clearAllSquareDOM(canvas.layoutSquareClassName);
+
+        // 渲染布局方块
+        canvas.renderLayoutSquareDOM();
+
+        // 清空数字方块
+        canvas.clearAllSquareDOM(canvas.numberSquareClassName);
+
+        // 生成数字方块
+        canvas.generateNumberSquare();
+
+        // 渲染数字方块
+        canvas.renderNumberSquareDOM();
+
+        // 生成随机数字方块
+        canvas.generateRandomNumberSquare();
+        canvas.generateRandomNumberSquare();
+    };
+
     /**
      * @param {String} selector 画布选择器
      * @param {String} scoreSelector 分数选择器
@@ -205,10 +229,10 @@
     };
 
     /**
-     * 检测left和top方向当前方块和目标方块是否存在空的方块
+     * 检测left方向当前方块和目标方块之间是否存在空的方块
      */
-    Canvas.prototype._detectLeftOrTopSequareBetween = function (row, firstColumn, secondColumn) {
-        for (var amount = secondColumn + 1; amount < firstColumn; amount++) {
+    Canvas.prototype._detectLeftSequareBetween = function (row, nextColumn, prevColumn) {
+        for (var amount = prevColumn + 1; amount < nextColumn; amount++) {
             if (this.numberSquares[row][amount].state)
                 return false;
         }
@@ -217,11 +241,35 @@
     };
 
     /**
-     * 检测right和bottom方向当前方块和目标方块是否存在空的方块
+     * 检测right方向当前方块和目标方块之间是否存在空的方块
      */
-    Canvas.prototype._detectRightOrBottomSequareBetween = function (row, firstColumn, secondColumn) {
-        for (var amount = secondColumn - 1; amount > firstColumn; amount--) {
+    Canvas.prototype._detectRightSequareBetween = function (row, nextColumn, prevColumn) {
+        for (var amount = prevColumn - 1; amount > nextColumn; amount--) {
             if (this.numberSquares[row][amount].state)
+                return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * 检测top方向当前方块和目标方块之间是否存在空的方块
+     */
+    Canvas.prototype._detectTopSequareBetween = function (row, column, nextRow) {
+        for (var amount = nextRow + 1; amount < row; amount++) {
+            if (this.numberSquares[amount][column].state)
+                return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * 检测bottom方向当前方块和目标方块之间是否存在空的方块
+     */
+    Canvas.prototype._detectBottomSequareBetween = function (row, column, nextRow) {
+        for (var amount = nextRow - 1; amount > row; amount--) {
+            if (this.numberSquares[amount][column].state)
                 return false;
         }
 
@@ -300,7 +348,7 @@
         for (var j = 1; j < this.columnMaximum; j++) {
             if (this.numberSquares[i][j].state) {
                 for (var k = 0; k < j; k++) {
-                    if (this._numberSquareSeriesOption(i, j, k, this.numberSquares[i][j], this.numberSquares[i][k], this._detectLeftOrTopSequareBetween, 0))
+                    if (this._numberSquareSeriesOption(i, j, k, this.numberSquares[i][j], this.numberSquares[i][k], this._detectLeftSequareBetween, 0))
                         break;
                 }
             }
@@ -314,7 +362,7 @@
         for (var j = this.columnMaximum - 2; j >= 0; j--) {
             if (this.numberSquares[i][j].state) {
                 for (var k = this.columnMaximum - 1; k > j; k--) {
-                    if (this._numberSquareSeriesOption(i, j, k, this.numberSquares[i][j], this.numberSquares[i][k], this._detectRightOrBottomSequareBetween, 0))
+                    if (this._numberSquareSeriesOption(i, j, k, this.numberSquares[i][j], this.numberSquares[i][k], this._detectRightSequareBetween, 0))
                         break;
                 }
             }
@@ -326,10 +374,9 @@
      */
     Canvas.prototype._moveTop = Canvas.prototype._iterateeAxis(function (i) {
         for (var j = 1; j < this.columnMaximum; j++) {
-            console.log(j, i);
             if (this.numberSquares[j][i].state) {
                 for (var k = 0; k < j; k++) {
-                    if (this._numberSquareSeriesOption(j, i, k, this.numberSquares[j][i], this.numberSquares[k][i], this._detectLeftOrTopSequareBetween, 1))
+                    if (this._numberSquareSeriesOption(j, i, k, this.numberSquares[j][i], this.numberSquares[k][i], this._detectTopSequareBetween, 1))
                         break;
                 }
             }
@@ -343,7 +390,7 @@
         for (var j = this.columnMaximum - 2; j >= 0; j--) {
             if (this.numberSquares[j][i].state) {
                 for (var k = this.columnMaximum - 1; k > j; k--) {
-                    if (this._numberSquareSeriesOption(j, i, k, this.numberSquares[j][i], this.numberSquares[k][i], this._detectRightOrBottomSequareBetween, 1))
+                    if (this._numberSquareSeriesOption(j, i, k, this.numberSquares[j][i], this.numberSquares[k][i], this._detectBottomSequareBetween, 1))
                         break;
                 }
             }
