@@ -19,7 +19,7 @@ function initGame () {
 document.addEventListener('DOMContentLoaded', function () {
     initGame();
 
-    document.querySelector('.new-game').addEventListener('click', function (e) {
+    document.querySelector('.new-game').addEventListener('touchstart', function (e) {
         initGame();
         e.preventDefault();
     }, false);
