@@ -17,6 +17,7 @@
 
     // 静态
     NumberSquare.unit = 'rem';
+    NumberSquare.speed = 200;
 
     /**
      * @param {Number} x 横坐标
@@ -35,9 +36,10 @@
         this.className = className;
         this.container = container;
         this.state = 0;
+        this.text = '';
         this.unHasNumberCSSStyle = {
-            left: this.x + this.x / 2 + this.constructor.unit,
-            top: this.y + this.y / 2 + this.constructor.unit,
+            left: this.x + this.width / 2 + this.constructor.unit,
+            top: this.y + this.width / 2 + this.constructor.unit,
             width: 0,
             height: 0
         };
@@ -66,15 +68,30 @@
     /**
      * 显示带有数字方块
      *
-     * @param {String} text 数字
      * @param {String} backgroundColor 背景色
      * @param {Boolean} isAnimation 显示过程是否带动画效果 [可选] default：false
      */
-    NumberSquare.prototype.showWithText = function (text, backgroundColor, isAnimation) {
+    NumberSquare.prototype.showWithText = function (backgroundColor, isAnimation) {
         isAnimation || (isAnimation = false);
         this._setCSSStyle({ 'background-color': backgroundColor });
-        this.node.innerHTML = text;
-        isAnimation && $(this.node).animate(this.hasNumberCSSStyle, 200);
+        this.node.innerHTML = this.text;
+        isAnimation && $(this.node).animate(this.hasNumberCSSStyle, 100);
+    };
+
+    /**
+     * 设置方块数字
+     *
+     * @param {String} text 方块状态 [可选] default: ''
+     */
+    NumberSquare.prototype.setText = function (text) {
+        this.text = text || '';
+    };
+
+    /**
+     * 获取方块数字
+     */
+    NumberSquare.prototype.getText = function () {
+        return this.text;
     };
 
     /**
@@ -104,8 +121,12 @@
      * 移动动画过程
      *
      */
-    NumberSquare.prototype.moveWithAnimation = function () {
-
+    NumberSquare.prototype.moveWithAnimation = function (left, top) {
+        $(this.node).animate({
+            left: left + this.constructor.unit,
+            top: top + this.constructor.unit },
+            this.constructor.speed
+        );
     };
 
     return NumberSquare;

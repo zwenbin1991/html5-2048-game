@@ -22,6 +22,9 @@ function initGame () {
     // 渲染布局方块
     canvas.renderLayoutSquareDOM();
 
+    // 生成数字方块
+    canvas.generateNumberSquare();
+
     // 渲染数字方块
     canvas.renderNumberSquareDOM();
 

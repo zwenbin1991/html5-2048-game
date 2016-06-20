@@ -65,12 +65,16 @@
      * 设置事件监听器
      */
     Canvas.prototype._touchstartListener = function (e) {
+        e.preventDefault();
+
         var touch = e.touches[0];
         this.touchStartX = touch.pageX;
         this.touchStartY = touch.pageY;
     };
 
     Canvas.prototype._touchendListener = function (e) {
+        e.preventDefault();
+
         var touch = e.changedTouches[0];
         var touchEndX = touch.pageX;
         var touchEndY = touch.pageY;
@@ -103,8 +107,10 @@
      * 产生随机数字方块
      */
     Canvas.prototype.generateRandomNumberSquare = function () {
-        if (!this._Space())
+        if (!this._Space()) {
+            alert('空');
             return false;
+        }
 
         var randXY = this._generateRandomXY();
         var currentSquare = null;
@@ -118,7 +124,8 @@
         }
 
         currentSquare.setState(1);
-        currentSquare.showWithText('2', backgroundColorMap['2'], true);
+        currentSquare.setText('2');
+        currentSquare.showWithText(backgroundColorMap[currentSquare.getText()], true);
     };
 
     /**
@@ -130,10 +137,28 @@
         return function () {
             for (var i = 0; i < this.rowMaximum; i++) {
                 for (var j = 0; j < this.columnMaximum; j++) {
-                    dispose.call(this, i, j);
+                    if (dispose.call(this, i, j) === true)
+                        return true;
                 }
             }
         };
+    };
+
+    /**
+     * 画布更新
+     */
+    Canvas.prototype._update = function () {
+        // 清空所有数字方块DOM
+        this.clearAllNumberSquareDOM();
+
+        // 画布重新渲染数字方块
+        this.renderNumberSquareDOM();
+
+        // 显示随机数字方块
+        this.generateRandomNumberSquare();
+
+        // 显示带有数字方块
+        this._showNumberSquare();
     };
 
     /**
@@ -156,40 +181,49 @@
      * 数字方块向左移动
      */
     Canvas.prototype._moveLeft = function () {
-        if (!this._canMoveLeft())
-            return;
-
         var currentSquare = null;
-        var staySquare = null;
+        var staySquare = null, sum;
 
         for (var i = 0; i < this.rowMaximum; i++) {
             for (var j = 1; j < this.columnMaximum; j++) {
                 if ((currentSquare = this.numberSquares[i][j]).state) {
-
                     for (var k = 0; k < j; k++) {
+                        if (!(staySquare = this.numberSquares[i][k]).state && currentSquare.state) { // 如果找到第一个为空的数字方块，则判断为最近的落脚点
+                            // 当前数字方块状态更新为0
+                            this._updateNumberSquare(currentSquare);
 
-                        // 找到最近的落脚方块
-                        if (!(staySquare = this.numberSquares[i][k]).state) {
-                            currentSquare.setState(0);
-                            currentSquare.setPerformance();
+                            // 目标数字方块状态更新为1，并设置数字为2
+                            this._updateNumberSquare(staySquare, 1, '2');
 
-                            staySquare.setState(1);
-                            staySquare.setPerformance();
+                            // 移动当前数字方块
+                            currentSquare.moveWithAnimation(this._getPosition(k), this._getPosition(i));
 
-                            // 随机生成数字方块
-                            this._generateRandomNumberSquare();
+                            continue;
+                        } else if ((staySquare = this.numberSquares[i][k]).text === currentSquare.text && currentSquare.state) { // 如果找到第一个数字相同的数字方块，则判断为最近的落脚点
+                            // 求和
+                            sum = parseInt(currentSquare.text) + parseInt(staySquare.text);
 
-                            // 清空所有数字方块
-                            this.clearAllNumberSquare();
+                            // 当前数字方块状态更新为0
+                            this._updateNumberSquare(currentSquare);
 
-                            // 画布重新渲染数字方块
-                            this.
+                            // 目标数字方块状态更新为1，并设置数字为两者总和
+                            this._updateNumberSquare(staySquare, 1, sum);
+
+                            // 移动当前数字方块
+                            currentSquare.moveWithAnimation(this._getPosition(k), this._getPosition(i));
+
+                            continue;
                         }
                     }
 
                 }
             }
         }
+
+        // 更新画布
+        setTimeout((function () {
+            this._update();
+        }).bind(this), 200);
     };
 
     /**
@@ -241,6 +275,27 @@
     };
 
     /**
+     * 计算位置
+     *
+     * @param {Number} i 坐标索引
+     * @return {Number}
+     */
+    Canvas.prototype._getPosition = function (i) {
+        return this.squareGap + i * (this.squareHeight + this.squareGap);
+    };
+
+    /**
+     * 数字方块更新
+     *
+     * @param {Number} i 坐标索引
+     * @return {Number}
+     */
+    Canvas.prototype._updateNumberSquare = function (numberSquare, state, text) {
+        numberSquare.setState(state);
+        numberSquare.setText(text);
+    };
+
+    /**
      * 画布是否填满数字方块
      */
     Canvas.prototype._Space = Canvas.prototype._iteratee(function (i, j) {
@@ -252,8 +307,8 @@
      * 渲染所有布局方块DOM
      */
     Canvas.prototype.renderLayoutSquareDOM = Canvas.prototype._iteratee(function (i, j) {
-        var x = j * this.squareHeight + (j + 1) * this.squareGap;
-        var y = i * this.squareWidth + (i + 1) * this.squareGap;
+        var x = this._getPosition(j);
+        var y = this._getPosition(i);
 
         new LayoutSquare(
             x,
@@ -266,15 +321,25 @@
     });
 
     /**
+     * 显示所有数字方块
+     */
+    Canvas.prototype._showNumberSquare = Canvas.prototype._iteratee(function (i, j) {
+        var currentNumberSquare = this.numberSquares[i][j];
+
+        if (currentNumberSquare.getState())
+            currentNumberSquare.showWithText(backgroundColorMap[currentNumberSquare.getText()]);
+    });
+
+    /**
      * 创建数字方块
      */
-    Canvas.prototype._generateNumberSquare = function () {
+    Canvas.prototype.generateNumberSquare = function () {
         for (var i = 0; i < this.rowMaximum; i++) {
             this.numberSquares[i] = new Array();
 
             for (var j = 0; j < this.columnMaximum; j++) {
-                var x = j * this.squareHeight + (j + 1) * this.squareGap;
-                var y = i * this.squareWidth + (i + 1) * this.squareGap;
+                var x = this._getPosition(j);
+                var y = this._getPosition(i);
 
                 this.numberSquares[i][j] = new NumberSquare(
                     x,
@@ -289,27 +354,16 @@
     };
 
     /**
-     * 显示所有数字方块
+     * 渲染所有数字方块DOM
      */
-    Canvas.prototype._showNumberSquare = Canvas.prototype._iteratee(function (i, j) {
-        var currentNumberSquare = this.numberSquares[i][j];
-
+    Canvas.prototype.renderNumberSquareDOM = Canvas.prototype._iteratee(function (i, j) {
+        this.numberSquares[i][j].render();
     });
 
     /**
-     * 渲染所有数字方块DOM
+     * 清空所有数字方块DOM
      */
-    Canvas.prototype.renderNumberSquareDOM = function () {
-        this._generateNumberSquare();
-        this._iteratee(function (i, j) {
-            this.numberSquares[i][j].render();
-        }).call(this);
-    };
-
-    /*
-    * 清空所有数字方块DOM
-    * */
-    Canvas.prototype.clearAllNumberSquare = function () {
+    Canvas.prototype.clearAllNumberSquareDOM = function () {
         $('.' + this.numberSquareClassName).remove();
     };
 
